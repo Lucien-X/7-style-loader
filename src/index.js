@@ -1,9 +1,11 @@
 import path from 'path';
+import fs from 'fs';
 
 import loaderUtils from 'loader-utils';
 import validateOptions from 'schema-utils';
 
 import schema from './options.json';
+import utils from './utils';
 
 const loaderApi = () => {};
 
@@ -14,6 +16,24 @@ loaderApi.pitch = function loader(request) {
     name: 'Style Loader',
     baseDataPath: 'options',
   });
+
+  const { resourcePath } = this;
+  // a prue function to inject things into options
+  const decorateOptions = (opts) => {
+    if (typeof opts.attributes === 'object') {
+      const optsCopy = utils.deepClone(opts);
+      // inject module info into each attribute
+      const moduleInfo = utils.findModule(fs, path.dirname(resourcePath)) || {};
+      Object.keys(optsCopy.attributes).forEach((key) => {
+        optsCopy.attributes[key] = optsCopy.attributes[key]
+          .replace(/\[moduleName\]/gi, moduleInfo.name || '')
+          .replace(/\[moduleVersion\]/gi, moduleInfo.version || '');
+      });
+      // console.log(resourcePath, optsCopy.attributes);
+      return optsCopy;
+    }
+    return opts;
+  };
 
   const insert =
     typeof options.insert === 'undefined'
@@ -78,7 +98,7 @@ if (module.hot) {
             content = content.__esModule ? content.default : content;`
       }
 
-var options = ${JSON.stringify(options)};
+var options = ${JSON.stringify(decorateOptions(options))};
 
 options.insert = ${insert};
 
@@ -148,7 +168,7 @@ if (module.hot) {
 
 var refs = 0;
 var dispose;
-var options = ${JSON.stringify(options)};
+var options = ${JSON.stringify(decorateOptions(options))};
 
 options.insert = ${insert};
 options.singleton = ${isSingleton};
@@ -211,7 +231,7 @@ if (module.hot) {
     )
   }
 
-  module.hot.dispose(function() { 
+  module.hot.dispose(function() {
     update();
   });
 }`
@@ -244,7 +264,7 @@ if (module.hot) {
             }`
       }
 
-var options = ${JSON.stringify(options)};
+var options = ${JSON.stringify(decorateOptions(options))};
 
 options.insert = ${insert};
 options.singleton = ${isSingleton};

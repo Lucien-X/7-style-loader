@@ -14,9 +14,13 @@
 [![chat][chat]][chat-url]
 [![size][size]][size-url]
 
-# style-loader
+# 7-style-loader
 
-Inject CSS into the DOM.
+**This is a forked version of style-loader, modified for seven-modules**
+
+New Feature:
+
+1. Extend the ability of attributes, you can use "[moduleName]" and "[moduleVersion]" template string in style tag attribute now.
 
 ## Getting Started
 
@@ -397,7 +401,17 @@ module.exports = {
       {
         test: /\.css$/i,
         use: [
-          { loader: 'style-loader', options: { attributes: { id: 'id' } } },
+          {
+            loader: 'style-loader',
+            options: {
+              attributes: {
+                id: 'id',
+                // according to "name" and "version" field in module.json
+                'data-module-name': '[moduleName]',
+                'data-module-version': '[moduleVersion]',
+              },
+            },
+          },
           { loader: 'css-loader' },
         ],
       },
